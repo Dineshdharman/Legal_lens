@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --risk-high: #dc2626;
+      --risk-med: #ea580c;
+      --safe: #16a34a;
+    }
+
+    body {
+      width: 380px;
+      height: 500px;
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      
+      /* THIS MAKES THE WINDOW ROUNDED */
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--card-bg);
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+    }
+    
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* MAIN CONTENT SCROLL AREA */
+    main {
+      padding: 20px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    /* BUTTON */
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+    }
+    
+    button:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* RESULTS CARD */
+    #results {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    /* SCORE DISPLAY */
+    .score-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .score-value {
+      font-size: 32px;
+      font-weight: 900; /* Extra Bold */
+    }
+    
+    /* Dynamic Colors Classes */
+    .score-bad { color: var(--risk-high); }
+    .score-meh { color: var(--risk-med); }
+    .score-good { color: var(--safe); }
+
+    /* SECTIONS */
+    h4 {
+      margin: 20px 0 10px 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    p#summary {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #334155;
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin: 0;
+    }
+
+    /* RED FLAGS LIST */
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #fff1f2;
+      border-left: 4px solid var(--risk-high);
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #881337;
+    }
+
+    /* LOADER */
+    #loading {
+      display: none;
+      text-align: center;
+      margin-top: 40px;
+    }
+    
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px auto;
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>⚖️ LegalLens</h2>
+  </header>
+
+  <main>
+    <button id="analyzeBtn">Analyze Page Contracts</button>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <div style="color: var(--text-muted); font-size: 14px;">Reading the fine print...</div>
+    </div>
+
+    <div id="results" style="display:none;">
+      
+      <div class="score-container">
+        <div>
+          <div class="score-label">Consumer Safety Score</div>
+          <div style="font-size: 12px; color: #94a3b8;">(10 is safest)</div>
+        </div>
+        <div id="score" class="score-value"></div>
+      </div>
+
+      <h4>Executive Summary</h4>
+      <p id="summary"></p>
+
+      <h4>🚨 Critical Alerts</h4>
+      <ul id="flags"></ul>
+    </div>
+  </main>
+
+  <script src="popup.js"></script>
+
+  <script>
+    // This helper function ensures the color updates correctly
+    // even if popup.js updates the text content later
+    const updateScoreColor = (score) => {
+        const el = document.getElementById('score');
+        el.innerText = score; // Set text
+        
+        // Reset classes first
+        el.className = 'score-value'; 
+        
+        // Add specific color class
+        if(score >= 8) el.classList.add('score-good');
+        else if(score >= 5) el.classList.add('score-meh');
+        else el.classList.add('score-bad');
+    }
+    
+    // Watch for changes to the score element
+    const observer = new MutationObserver(() => {
+        const scoreText = document.getElementById('score').innerText;
+        if(scoreText) {
+            // Convert "7/10" or just "7" to an integer
+            const num = parseInt(scoreText);
+            if (!isNaN(num)) updateScoreColor(num);
+        }
+    });
+    
+    observer.observe(document.getElementById('score'), { childList: true, characterData: true, subtree: true });
+  </script>
+
+</body>
+</html>
