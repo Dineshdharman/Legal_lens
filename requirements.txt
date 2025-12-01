@@ -1,0 +1,7 @@
+# Requires Python >=3.9
+fastapi
+uvicorn[standard]
+google-generativeai; python_version>="3.9"
+python-dotenv
+typing-extensions
+pydantic
