@@ -9,7 +9,7 @@
 * **Observability:** Full backend tracing for every agent interaction.
 
 ## 🛠️ Tech Stack
-* **AI Model:** Google Gemini 1.5 Flash
+* **AI Model:** Google Gemini 2.5 Flash
 * **Backend:** Python, FastAPI, Pydantic (Structured Outputs)
 * **Frontend:** Chrome Extension (HTML/CSS/JS Manifest V3)
 
